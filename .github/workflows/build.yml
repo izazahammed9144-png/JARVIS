@@ -23,7 +23,12 @@ jobs:
           gradle-version: "8.9"
       - name: Build APK
         working-directory: proj/JARVIS_V1_3_Gemini
-        run: gradle assembleDebug
+        run: |
+          set +e
+          gradle assembleDebug --console=plain > build.log 2>&1
+          code=$?
+          grep -E "^e: |What went wrong|error:|Could not|Unresolved" -A2 build.log | head -20 | while IFS= read -r l; do echo "::error::$l"; done
+          exit $code
       - uses: actions/upload-artifact@v4
         with:
           name: JARVIS-apk
