@@ -1,0 +1,30 @@
+name: Build JARVIS APK
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip and fix project
+        run: |
+          unzip -o ./*.zip -d proj
+          cd proj/JARVIS_V1_3_Gemini
+          sed -i '/kotlin.android/a\    id("org.jetbrains.kotlin.plugin.compose") version "2.0.21" apply false' build.gradle.kts
+          sed -i '/kotlin.android/a\    id("org.jetbrains.kotlin.plugin.compose")' app/build.gradle.kts
+          sed -i 's/^android {/android {\n    buildFeatures { compose = true }/' app/build.gradle.kts
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Build APK
+        working-directory: proj/JARVIS_V1_3_Gemini
+        run: gradle assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JARVIS-apk
+          path: proj/JARVIS_V1_3_Gemini/app/build/outputs/apk/debug/app-debug.apk
